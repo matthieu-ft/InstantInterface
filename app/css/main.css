@@ -1,0 +1,54 @@
+
+body {
+	background: #303030;
+	margin:0;
+  font-family: 'Arial'/*'Roboto'*/;
+  
+  font-size:1.7em;
+}
+
+.container, .parameter{
+  padding: 0.5em 0 0  0.5em ;
+  overflow:hidden;
+}
+
+.container{
+  /*width:100%;*/
+  /*border-top:solid 1px;*/
+}
+
+.container_name{
+  padding: 0.3em 0.3em 0.1em 0.3em;
+  margin-right: 0.5em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.parameter{
+  padding-right: 1em;
+}
+
+.parameter_name{
+}
+
+.parameter_content
+{
+  margin-left:1em;
+  overflow:hidden;
+}
+
+.param_button, .param_toggle
+{
+  float:right;
+}
+
+.button .parameter_name,
+.toggle .parameter_name
+{
+  float:left;
+}
+.button .parameter_content,
+.toggle .parameter_content
+{
+float:right;
+}

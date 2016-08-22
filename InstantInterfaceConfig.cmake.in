@@ -1,0 +1,18 @@
+# - Config file for the InstantInterface  package
+#  It defines the following variables
+#  InstantInterface_INCLUDE_DIRS - include directories for FooBar
+#  InstantInterface_LIBRARIES    - libraries to link against
+#  InstantInterface_EXECUTABLE   - the basic_interface executable
+ 
+# Compute paths
+get_filename_component(InstantInterface_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(InstantInterface_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+ 
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET foo AND NOT InstantInterface_BINARY_DIR)
+  include("${InstantInterface_CMAKE_DIR}/InstantInterfaceTargets.cmake")
+endif()
+ 
+# These are IMPORTED targets created by FooBarTargets.cmake
+set(InstantInterface_LIBRARIES InstantInterface)
+set(InstantInterface_EXECUTABLE basic_interface)
