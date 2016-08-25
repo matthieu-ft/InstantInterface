@@ -42,10 +42,8 @@
 
 #include <InstantInterface/AttributeManagement.h>
 
-#include <opencv2/core.hpp>
 #include <vector>
 
-using namespace cv;
 using namespace std;
 using namespace InstantInterface;
 
@@ -56,8 +54,8 @@ BOOST_AUTO_TEST_CASE(StateParameterModifier)
 
     float v = 0;
     float period = 1;
-    vector<float> states = {0,0.12,0.3,0.45,0.60,0.91};
-    auto param = InstantInterface::AttributeFactory::makeAttribute(&v)->min(0)->max(period)->periodic(true)->enforceExtrema(false);
+    vector<float> states = {0.0f,0.12f,0.3f,0.45f,0.60f,0.91f};
+    auto param = InstantInterface::AttributeFactory::makeAttribute(&v)->setMin(0)->setMax(period)->periodic(true)->enforceExtrema(false);
     auto modifier = makeStateValueModifier(param,states);
 
     int index, closestIndex, closestModuloIndex, state, periodPower;

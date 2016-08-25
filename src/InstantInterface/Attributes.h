@@ -99,14 +99,14 @@ public:
      * @param value
      * @return
      */
-    Ptr min(T value);
+    Ptr setMin(T value);
 
     /**s
      * @brief defines a maximun value for the attribute
      * @param value
      * @return
      */
-    Ptr max(T value);
+    Ptr setMax(T value);
 
     /**
      * @brief compute the period of the attribute based on the min, max value
@@ -118,13 +118,13 @@ public:
      * @brief get min value
      * @return
      */
-    T min();
+    T getMin();
 
     /**
      * @brief get max value
      * @return
      */
-    T max();
+    T getMax();
 
     /**
      * @brief returns true if a minimum value has been defined. False otherwise.

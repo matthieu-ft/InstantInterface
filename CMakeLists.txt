@@ -35,7 +35,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-SET(CMAKE_CXX_FLAGS "-std=c++14")
+SET(CMAKE_CXX_FLAGS "-std=c++14 /EHsc")
 
 
 set(PROJECT_NAME InstantInterface)
@@ -102,14 +102,18 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 #find packages
 
-find_package(Boost COMPONENTS system thread REQUIRED)
+find_package(Boost COMPONENTS system thread  REQUIRED)
 find_package(websocketpp REQUIRED)
+
+#### required for compiling under windows
+add_definitions( -DBOOST_ALL_NO_LIB )
 
 include_directories(  ${Boost_INCLUDE_DIR}  )
 include_directories( "${WEBSOCKETPP_INCLUDE_DIR}" )
 include_directories(  src )
 
-add_library(${LibraryName} SHARED 
+
+add_library(${LibraryName} STATIC 
     src/InstantInterface/Attributes.cpp
     src/InstantInterface/Attributes.hpp
     src/InstantInterface/AttributeManagement.cpp
@@ -120,11 +124,11 @@ add_library(${LibraryName} SHARED
 target_link_libraries(${LibraryName} ${Boost_LIBRARIES})
 
 add_executable(basic_interface ./src/examples/basic_interface.cpp)
-set_target_properties(basic_interface PROPERTIES DEBUG_POSTFIX _d)
+#set_target_properties(basic_interface PROPERTIES DEBUG_POSTFIX _d)
 target_link_libraries(basic_interface ${LibraryName})
 
 add_executable(dynamic_configurations ./src/examples/dynamic_configurations.cpp)
-set_target_properties(dynamic_configurations PROPERTIES DEBUG_POSTFIX _d)
+#set_target_properties(dynamic_configurations PROPERTIES DEBUG_POSTFIX _d)
 target_link_libraries(dynamic_configurations ${LibraryName})
 
 
@@ -176,6 +180,7 @@ install(TARGETS ${LibraryName}
   EXPORT InstantInterfaceTargets
   RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
   LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
   PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/InstantInterface"
     COMPONENT dev)
     

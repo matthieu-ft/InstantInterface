@@ -70,9 +70,9 @@ int main(int argc, char* argv[])
 
     //make a periodic attribute (an attribute is not periodic per default) for which extrema are not enforced (they are enforced per default)
     //in this case, this means that the value 101 is allowed but it is equivalent to the value 1, because the period is max-min.
-    auto param1 = InstantInterface::AttributeFactory::makeAttribute(&i)->min(0)->max(100)->periodic(true)->enforceExtrema(false);
+    auto param1 = InstantInterface::AttributeFactory::makeAttribute(&i)->setMin(0)->setMax(100)->periodic(true)->enforceExtrema(false);
     //make a normal attribute
-    auto param2 = InstantInterface::AttributeFactory::makeAttribute(&j)->min(0)->max(500);
+    auto param2 = InstantInterface::AttributeFactory::makeAttribute(&j)->setMin(0)->setMax(500);
 
 
 

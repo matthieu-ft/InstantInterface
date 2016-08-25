@@ -34,6 +34,8 @@
 
 #include "Attributes.h"
 
+#include <algorithm>
+
 namespace InstantInterface
 {
 template <class T>
@@ -67,7 +69,7 @@ void AttributeT<T>::set(T value)
 }
 
 template <class T>
-typename AttributeT<T>::Ptr AttributeT<T>::min(T value)
+typename AttributeT<T>::Ptr AttributeT<T>::setMin(T value)
 {
     _min = value;
     _hasMin = true;
@@ -75,7 +77,7 @@ typename AttributeT<T>::Ptr AttributeT<T>::min(T value)
 }
 
 template <class T>
-typename AttributeT<T>::Ptr AttributeT<T>::max(T value)
+typename AttributeT<T>::Ptr AttributeT<T>::setMax(T value)
 {
     _max = value;
     _hasMax = true;
@@ -89,13 +91,13 @@ T AttributeT<T>::getPeriod() const
 }
 
 template <class T>
-T AttributeT<T>::min()
+T AttributeT<T>::getMin()
 {
     return _min;
 }
 
 template <class T>
-T AttributeT<T>::max()
+T AttributeT<T>::getMax()
 {
     return _max;
 }

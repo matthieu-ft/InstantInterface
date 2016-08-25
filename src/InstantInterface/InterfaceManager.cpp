@@ -512,8 +512,8 @@ bool JsonAttributeT<ParamType>::getMinMax(ParamType& minVal, ParamType& maxVal)
         output = attr->hasMin() && attr->hasMax();
         if(output)
         {
-            minVal = attr->min();
-            maxVal = attr->max();
+            minVal = attr->getMin();
+            maxVal = attr->getMax();
         }
     }
     else

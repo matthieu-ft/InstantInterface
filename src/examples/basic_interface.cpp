@@ -83,10 +83,10 @@ int main(int argc, char* argv[])
     Basic obj;
 
     //create the attribute object that encapsulate these attributes
-    auto param1 = InstantInterface::AttributeFactory::makeAttribute(&i)->min(-1)->max(5);
-    auto param2 = InstantInterface::AttributeFactory::makeAttribute(&j)->min(-5)->max(3);
-    auto param3 = InstantInterface::AttributeFactory::makeAttribute(&k)->min(0)->max(50)->periodic(true);
-    auto param4 = InstantInterface::AttributeFactory::makeAttribute(&obj, &Basic::get, &Basic::set)->min(-1)->max(10);
+    auto param1 = InstantInterface::AttributeFactory::makeAttribute(&i)->setMin(-1)->setMax(5);
+    auto param2 = InstantInterface::AttributeFactory::makeAttribute(&j)->setMin(-5)->setMax(3);
+    auto param3 = InstantInterface::AttributeFactory::makeAttribute(&k)->setMin(0)->setMax(50)->periodic(true);
+    auto param4 = InstantInterface::AttributeFactory::makeAttribute(&obj, &Basic::get, &Basic::set)->setMin(-1)->setMax(10);
     auto param5 = InstantInterface::AttributeFactory::makeAttribute(&v);
 
     //register the attributes in the interface in the group "Group of attributes"
