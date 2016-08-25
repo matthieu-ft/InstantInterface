@@ -35,12 +35,16 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-SET(CMAKE_CXX_FLAGS "-std=c++14 /EHsc")
-
-
 set(PROJECT_NAME InstantInterface)
 set(LibraryName InstantInterface)
+
 project(${PROJECT_NAME})
+
+add_compile_options(-std=c++14)
+
+if(WIN32)
+    add_compile_options(/EHsc)
+endif(WIN32)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
