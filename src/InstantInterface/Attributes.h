@@ -36,6 +36,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include <vector>
 
 namespace InstantInterface {
 
@@ -52,6 +53,7 @@ namespace InstantInterface {
  *  B b; // id = 0
  *
  */
+
 
 template <class T>
 class IndexedBase
@@ -70,6 +72,10 @@ private:
     int id;
 };
 
+
+
+typedef std::function<void(void)> DerivedAttribute;
+
 /**
  *  @brief This class encapsulates/defines an interface for an attribute. It has a set() get(). They have to be implemented in subclasses depending of the
  * nature of the attribute (ptr to a variable, getter setter, lambda functions...)
@@ -80,7 +86,7 @@ class AttributeT : public IndexedBase<AttributeT<T> >, public std::enable_shared
 public:
     typedef std::shared_ptr<AttributeT<T> > Ptr;
 
-    AttributeT();
+    AttributeT(std::vector<DerivedAttribute> derivedAttributes = {});
 
     /**
      * @brief set value of the attribute
@@ -166,6 +172,7 @@ private:
     T _min, _max;
     bool _hasMin, _hasMax, _enforceExtrema;
     bool _isPeriodic;
+    std::vector<DerivedAttribute> derivedAttributes;
 };
 
 
@@ -177,7 +184,8 @@ template <class ParamType>
 class AttributeT_Raw : public AttributeT<ParamType>
 {
 public:
-    AttributeT_Raw(ParamType* pParam):
+    AttributeT_Raw(ParamType* pParam, std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         ptr(pParam)
     {}
 
@@ -208,7 +216,9 @@ public:
     AttributeT_Method_1(
             ObjType* obj,
             const ParamType& (ObjType::* get)() const,
-            void (ObjType::* set)(const ParamType&)):
+            void (ObjType::* set)(const ParamType&),
+            std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         object(obj),
         getter(get),
         setter(set)
@@ -243,7 +253,9 @@ public:
     AttributeT_Method_2(
             ObjType* obj,
             ParamType (ObjType::* get)() const,
-            void (ObjType::* set)(const ParamType&)):
+            void (ObjType::* set)(const ParamType&),
+            std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         object(obj),
         getter(get),
         setter(set)
@@ -279,7 +291,9 @@ public:
     AttributeT_Method_3(
             ObjType* obj,
             ParamType (ObjType::* get)() const,
-            void (ObjType::* set)(ParamType)):
+            void (ObjType::* set)(ParamType),
+            std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         object(obj),
         getter(get),
         setter(set)
@@ -309,13 +323,15 @@ template <class ParamType, class LambdaGetter, class LambdaSetter>
 struct AttributeT_lambda : public AttributeT<ParamType>
 {
 public:
-    AttributeT_lambda(LambdaGetter g, LambdaSetter s):
+    AttributeT_lambda(LambdaGetter g, LambdaSetter s, std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         getter(g),
         setter(s)
     {}
 
     //this constructor is used so that we force the write type for objtype with some value
-    AttributeT_lambda(LambdaGetter g, LambdaSetter s, const ParamType& value):
+    AttributeT_lambda(LambdaGetter g, LambdaSetter s, const ParamType& value, std::vector<DerivedAttribute> derivedAttributes = {}):
+        AttributeT<ParamType>(derivedAttributes),
         getter(g),
         setter(s)
     {}
@@ -387,9 +403,9 @@ namespace AttributeFactory{
      * @brief create Attribute from pointer to a variable
      */
     template <class T>
-    std::shared_ptr<AttributeT<T> > makeAttribute(T* ptr)
+    std::shared_ptr<AttributeT<T> > makeAttribute(T* ptr, std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_Raw<T> >(ptr);
+        auto p = std::make_shared<AttributeT_Raw<T> >(ptr,derivedAttributes);
         return p;
     }
 
@@ -398,9 +414,9 @@ namespace AttributeFactory{
      * as last parameter (but its value is not used)
      */
     template <class T, class LambdaGetter, class LambdaSetter>
-    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, T value)
+    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, T value, std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter);
+        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter, derivedAttributes);
         return p;
     }
 
@@ -409,9 +425,9 @@ namespace AttributeFactory{
      * It has to be precised as type parameter. For instance makeAttribute<float> will have to be used for a float attribute
      */
     template <class T, class LambdaGetter, class LambdaSetter>
-    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter)
+    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter);
+        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter,derivedAttributes);
         return p;
     }
 
@@ -422,9 +438,10 @@ namespace AttributeFactory{
     std::shared_ptr<AttributeT<T> > makeAttribute(
             ObjType* obj,
             const T& (ObjType::* get)() const,
-            void (ObjType::* set)(const T&))
+            void (ObjType::* set)(const T&),
+            std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_Method_1<ObjType,T> >(obj, get, set);
+        auto p = std::make_shared<AttributeT_Method_1<ObjType,T> >(obj, get, set, derivedAttributes);
         return p;
     }
 
@@ -435,9 +452,10 @@ namespace AttributeFactory{
     std::shared_ptr<AttributeT<T> > makeAttribute(
             ObjType* obj,
             T (ObjType::* get)() const,
-            void (ObjType::* set)(const T&))
+            void (ObjType::* set)(const T&),
+            std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_Method_2<ObjType,T> >(obj, get, set);
+        auto p = std::make_shared<AttributeT_Method_2<ObjType,T> >(obj, get, set, derivedAttributes);
         return p;
     }
 
@@ -448,9 +466,10 @@ namespace AttributeFactory{
     std::shared_ptr<AttributeT<T> > makeAttribute(
             ObjType* obj,
             T (ObjType::* get)() const,
-            void (ObjType::* set)(T))
+            void (ObjType::* set)(T),
+            std::vector<DerivedAttribute> derivedAttributes = {})
     {
-        auto p = std::make_shared<AttributeT_Method_3<ObjType,T> >(obj, get, set);
+        auto p = std::make_shared<AttributeT_Method_3<ObjType,T> >(obj, get, set, derivedAttributes);
         return p;
     }
 }

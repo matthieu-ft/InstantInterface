@@ -44,14 +44,15 @@ int IndexedBase<T>::next_id = 0;
 
 
 template <class T>
-AttributeT<T>::AttributeT():
+AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
     IndexedBase<AttributeT<T> >(),
     _min(0),
     _max(0),
     _hasMin(false),
     _hasMax(false),
     _enforceExtrema(true),
-    _isPeriodic(false)
+    _isPeriodic(false),
+    derivedAttributes(derAtt)
 {}
 
 template <class T>
@@ -65,7 +66,11 @@ void AttributeT<T>::set(T value)
         if(_hasMin)
             filteredValue = std::max(_min, filteredValue);
     }
+
     _set(filteredValue);
+
+    for(auto& fun: derivedAttributes)
+        fun();
 }
 
 template <class T>
