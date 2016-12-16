@@ -787,6 +787,13 @@ private:
     std::map<int, TimedModifierVec> timedModifiersCollection;
 };
 
+inline std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed){
+    return AttributeFactory::makeAction([acts,&dc, transitionSpeed](){
+        dc.add(acts,1000.0f/(std::max(0.001f,transitionSpeed->get())));
+    });
+}
+
+
 /**
  * @brief The StateParameterModifierManager class is responsible managing the modifier of a state attribute.
  */

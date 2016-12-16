@@ -52,7 +52,8 @@ AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
     _hasMax(false),
     _enforceExtrema(true),
     _isPeriodic(false),
-    derivedAttributes(derAtt)
+    _derivedAttributes(derAtt),
+    _name("empty name")
 {}
 
 template <class T>
@@ -69,7 +70,7 @@ void AttributeT<T>::set(T value)
 
     _set(filteredValue);
 
-    for(auto& fun: derivedAttributes)
+    for(auto& fun: _derivedAttributes)
         fun();
 }
 
@@ -139,5 +140,31 @@ typename AttributeT<T>::Ptr AttributeT<T>::enforceExtrema(bool v)
     return this->shared_from_this();
 }
 
+
+template <class T>
+typename AttributeT<T>::Ptr AttributeT<T>::setName(std::string name)
+{
+    _name = name;
+    return this->shared_from_this();
+}
+
+
+template <class T>
+const std::string& AttributeT<T>::getName() const
+{
+    return _name;
+}
+
+template <class T>
+StateAttributePtr AttributeT<T>::makeStateAttribute()
+{
+    return std::make_shared<StateAttributeT<T> > (this->shared_from_this());
+}
+
+template <class T>
+TypeValue AttributeT<T>::getTypeValue() const
+{
+    return getValueFromType<T>();
+}
 
 }

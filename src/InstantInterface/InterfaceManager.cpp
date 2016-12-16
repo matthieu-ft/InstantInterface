@@ -295,6 +295,8 @@ InterfaceManager &InterfaceManager::addInteractionElement(const string &name, st
     return *this;
 }
 
+
+
 template <>
 InterfaceManager &InterfaceManager::addInteractionElement<float>(const std::string& name, std::shared_ptr<AttributeT<float> > elem){
     impl->addInteractionElement(name, factory::makeJson(elem));

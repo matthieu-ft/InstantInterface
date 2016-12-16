@@ -75,6 +75,51 @@ public:
     template <typename ParamType>
     InterfaceManager &addInteractionElement(const std::string& name, std::shared_ptr<AttributeT<ParamType> > elem);
 
+
+    /**
+     * @brief adds the attribute \p elem to the interface at the current level with \p name as label
+     * specialized for int, float, double, bool, std::string
+     * @param elem attribute to be controlled by the interface, already containing the label
+     * @param returns the current interface (same as *this)
+     */
+    template <typename ParamType>
+    InterfaceManager &addInteractionElement(std::shared_ptr<AttributeT<ParamType> > elem){
+        return addInteractionElement(elem->getName(), elem);
+    }
+
+    InterfaceManager &addInteractionElement_generic(AttributePtr elem){
+        switch (elem->getTypeValue()) {
+        case TYPE_BOOL:
+            addInteractionElement(std::static_pointer_cast<AttributeT<bool> >(elem));
+            break;
+        case TYPE_INT:
+            addInteractionElement(std::static_pointer_cast<AttributeT<int> >(elem));
+            break;
+        case TYPE_FLOAT:
+            addInteractionElement(std::static_pointer_cast<AttributeT<float> >(elem));
+            break;
+        case TYPE_DOUBLE:
+            addInteractionElement(std::static_pointer_cast<AttributeT<double> >(elem));
+            break;
+        case TYPE_STRING:
+            addInteractionElement(std::static_pointer_cast<AttributeT<std::string> >(elem));
+            break;
+        default:
+            break;
+        }
+
+        return *this;
+    }
+
+    InterfaceManager &addInteractionElements(const std::vector<AttributePtr>& attributes)
+    {
+        for(auto ptr: attributes)
+        {
+            addInteractionElement_generic(ptr);
+        }
+        return *this;
+    }
+
     /**
      * @brief adds the action \p elem to the interface at the current level with \p name as label
      * @param name label

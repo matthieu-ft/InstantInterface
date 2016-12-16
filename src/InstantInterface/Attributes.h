@@ -37,6 +37,8 @@
 #include <cstdlib>
 #include <memory>
 #include <vector>
+#include <opencv2/core.hpp>
+#include <string>
 
 namespace InstantInterface {
 
@@ -76,17 +78,42 @@ private:
 
 typedef std::function<void(void)> DerivedAttribute;
 
+enum TypeValue{
+    TYPE_UNDEFINED,
+    TYPE_BOOL,
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_DOUBLE,
+    TYPE_STRING
+};
+
+template <class T>
+TypeValue getValueFromType();
+
+
 /**
  *  @brief This class encapsulates/defines an interface for an attribute. It has a set() get(). They have to be implemented in subclasses depending of the
  * nature of the attribute (ptr to a variable, getter setter, lambda functions...)
  */
+
+class StateAttribute;
+typedef std::shared_ptr<StateAttribute> StateAttributePtr;
+
+class Attribute
+{
+public:
+   virtual StateAttributePtr makeStateAttribute() = 0;
+   virtual TypeValue getTypeValue() const = 0;
+};
+typedef std::shared_ptr<Attribute> AttributePtr;
+
 template <typename T>
-class AttributeT : public IndexedBase<AttributeT<T> >, public std::enable_shared_from_this<AttributeT<T> >
+class AttributeT : public IndexedBase<AttributeT<T> >, public std::enable_shared_from_this<AttributeT<T> >, public Attribute
 {
 public:
     typedef std::shared_ptr<AttributeT<T> > Ptr;
 
-    AttributeT(std::vector<DerivedAttribute> derivedAttributes = {});
+    AttributeT(std::vector<DerivedAttribute> _derivedAttributes = {});
 
     /**
      * @brief set value of the attribute
@@ -165,6 +192,19 @@ public:
      */
     Ptr enforceExtrema(bool v);
 
+    /**
+     * @brief set the name of the attribute
+     * @param name
+     */
+    Ptr setName(std::string name);
+
+    const std::string& getName() const;
+
+    StateAttributePtr makeStateAttribute();
+
+    TypeValue getTypeValue() const;
+
+
 protected:
     virtual void _set(T value) = 0;
 
@@ -172,9 +212,82 @@ private:
     T _min, _max;
     bool _hasMin, _hasMax, _enforceExtrema;
     bool _isPeriodic;
-    std::vector<DerivedAttribute> derivedAttributes;
+    std::vector<DerivedAttribute> _derivedAttributes;
+    std::string _name;
 };
 
+typedef std::shared_ptr<AttributeT<float> > FloatAttribute;
+typedef std::shared_ptr<AttributeT<bool> > BoolAttribute;
+typedef std::shared_ptr<AttributeT<int> > IntAttribute;
+
+
+class StateAttribute
+{
+public:
+    virtual void read(const cv::FileNode &node) = 0;
+    virtual void write(cv::FileStorage &fs) const = 0;
+    virtual void saveState() = 0;
+    virtual void forceState() = 0;
+};
+
+template <typename T>
+class StateAttributeT : public StateAttribute
+{
+public:
+
+    typedef typename AttributeT<T>::Ptr AttributeTPtr;
+
+    StateAttributeT(std::shared_ptr<AttributeT<T> > pAttribute):
+        attribute(pAttribute),
+        state(pAttribute->get())
+    {}
+
+    void read(const cv::FileNode &node)
+    {
+        AttributeTPtr ptr;
+        if(ptr = getAttribute())
+        {
+            node[ptr->getName()] >> state;
+        }
+    }
+
+    void write(cv::FileStorage &fs) const
+    {
+
+        AttributeTPtr ptr;
+        if(ptr = getAttribute())
+        {
+            fs << ptr->getName() << state;
+        }
+    }
+
+    void saveState()
+    {
+        AttributeTPtr ptr;
+        if(ptr = getAttribute())
+        {
+            state = ptr->get();
+        }
+    }
+
+    void forceState()
+    {
+        AttributeTPtr ptr;
+        if(ptr = getAttribute())
+        {
+            ptr->set(state);
+        }
+    }
+
+private:
+    AttributeTPtr getAttribute() const
+    {
+        return attribute.lock();
+    }
+
+    std::weak_ptr<AttributeT<T> > attribute;
+    T state;
+};
 
 
 /**

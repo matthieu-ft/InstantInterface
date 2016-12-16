@@ -36,4 +36,16 @@
 
 namespace InstantInterface {
 
+
+template <>
+ TypeValue getValueFromType<bool>(){return TYPE_BOOL;}
+template <>
+ TypeValue getValueFromType<int>(){return TYPE_INT;}
+template <>
+ TypeValue getValueFromType<float>(){return TYPE_FLOAT;}
+template <>
+ TypeValue getValueFromType<double>(){return TYPE_DOUBLE;}
+template <>
+ TypeValue getValueFromType<std::string>(){return TYPE_STRING;}
+
 }

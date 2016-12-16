@@ -36,11 +36,11 @@
  #define BOOST_TEST_DYN_LINK
 
 //Define our Module name (prints at testing)
- #define BOOST_TEST_MODULE "StateParameterTest"
+ #define BOOST_TEST_MODULE "AttributeTest"
 
 #include <boost/test/unit_test.hpp>
 
-#include <InstantInterface/AttributeManagement.h>
+#include <InstantInterface/Attributes.h>
 
 #include <vector>
 
@@ -51,38 +51,11 @@ BOOST_AUTO_TEST_SUITE(ParameterModifier)
 
 BOOST_AUTO_TEST_CASE(StateParameterModifier)
 {
-
-    float v = 0;
-    float period = 1;
-    vector<float> states = {0.0f,0.12f,0.3f,0.45f,0.60f,0.91f};
-    auto param = InstantInterface::AttributeFactory::makeAttribute(&v)->setMin(0)->setMax(period)->periodic(true)->enforceExtrema(false);
-    auto modifier = makeStateValueModifier(param,states);
-
-    int index, closestIndex, closestModuloIndex, state, periodPower;
-    float value, computedValue;
-
-    for(int periodPower = -10; periodPower<10; periodPower++)
-    {
-        for(int state = 0; state<states.size(); state++)
-        {
-            value = states[state] + (float)periodPower*period;
-            index = periodPower*(int)states.size() + state;
-            closestModuloIndex = modifier->closestModuloIndex(value);
-            closestIndex = modifier->closestIndex(value);
-            computedValue = modifier->getValueAtIndex(index);
-
-            BOOST_CHECK_MESSAGE( state == closestModuloIndex, "The closest modulo index ("<<closestModuloIndex
-                                 <<") is different from the state ("<<index
-                                 <<"), for period ("<<periodPower<<")");
-            BOOST_CHECK_MESSAGE( index == closestIndex, "The closest index ("<<closestIndex
-                                 <<") is different from the index ("<<index
-                                 <<"), for state ("<<state<<") and period ("<<periodPower<<")");
-            BOOST_CHECK_MESSAGE( value == computedValue, "The computed value ("<<computedValue<<") is different from value ("<<value
-                                 <<"), for state ("<<state<<") and period ("<<periodPower<<")");
-        }
-    }
-
-
+    BOOST_CHECK(getValueFromType<bool>() == TYPE_BOOL);
+    BOOST_CHECK(getValueFromType<int>() == TYPE_INT);
+    BOOST_CHECK(getValueFromType<float>() == TYPE_FLOAT);
+    BOOST_CHECK(getValueFromType<double>() == TYPE_DOUBLE);
+    BOOST_CHECK(getValueFromType<std::string>() == TYPE_STRING);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -108,6 +108,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 find_package(Boost COMPONENTS system thread  REQUIRED)
 find_package(websocketpp REQUIRED)
+find_package(OpenCV REQUIRED )
 
 #### required for compiling under windows
 add_definitions( -DBOOST_ALL_NO_LIB )
@@ -125,7 +126,7 @@ add_library(${LibraryName} STATIC
     src/InstantInterface/InterfaceManager.cpp
     src/json/jsoncpp.cpp)
 
-target_link_libraries(${LibraryName} ${Boost_LIBRARIES})
+target_link_libraries(${LibraryName} ${Boost_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(basic_interface ./src/examples/basic_interface.cpp)
 #set_target_properties(basic_interface PROPERTIES DEBUG_POSTFIX _d)
