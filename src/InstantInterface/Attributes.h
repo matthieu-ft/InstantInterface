@@ -74,6 +74,8 @@ private:
     int id;
 };
 
+class IndexedModifiable : public IndexedBase<IndexedModifiable>
+{};
 
 
 typedef std::function<void(void)> DerivedAttribute;
@@ -108,7 +110,7 @@ public:
 typedef std::shared_ptr<Attribute> AttributePtr;
 
 template <typename T>
-class AttributeT : public IndexedBase<AttributeT<T> >, public std::enable_shared_from_this<AttributeT<T> >, public Attribute
+class AttributeT : public IndexedModifiable, public std::enable_shared_from_this<AttributeT<T> >, public Attribute
 {
 public:
     typedef std::shared_ptr<AttributeT<T> > Ptr;

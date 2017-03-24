@@ -45,7 +45,7 @@ int IndexedBase<T>::next_id = 0;
 
 template <class T>
 AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
-    IndexedBase<AttributeT<T> >(),
+    IndexedModifiable(),
     _min(0),
     _max(0),
     _hasMin(false),

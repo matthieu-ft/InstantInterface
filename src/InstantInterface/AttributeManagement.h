@@ -220,6 +220,7 @@ class ParameterModifier
 {
 public:
     ParameterModifier();
+    virtual ~ParameterModifier();
 
     /**
      * @brief getMixer returns the mixer responsible for combining the contribution of the different modifiers for the same parameter

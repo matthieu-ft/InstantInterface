@@ -182,6 +182,8 @@ namespace InstantInterface {
     ParameterModifier::ParameterModifier()
     {}
 
+    ParameterModifier::~ParameterModifier() {}
+
     std::shared_ptr<TimedModifier> DynamicConfiguration::add(std::shared_ptr<TimedModifier> timeMod)
     {
         int paramId = timeMod->getModifier()->getParameterId();
