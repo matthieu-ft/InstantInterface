@@ -522,6 +522,14 @@ namespace AttributeFactory{
         return p;
     }
 
+    template <class T, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(T* ptr, Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_Raw<T> >(ptr,dav);
+        return p;
+    }
+
     /**
      * @brief create Attribue based on lambda setter and getter. The resolution of the attribute type is done with the value given
      * as last parameter (but its value is not used)
@@ -530,6 +538,13 @@ namespace AttributeFactory{
     std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, T value, std::vector<DerivedAttribute> derivedAttributes = {})
     {
         auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter, derivedAttributes);
+        return p;
+    }
+    template <class T, class LambdaGetter, class LambdaSetter, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, T value, Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter, dav);
         return p;
     }
 
@@ -543,6 +558,14 @@ namespace AttributeFactory{
         auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter,derivedAttributes);
         return p;
     }
+    template <class T, class LambdaGetter, class LambdaSetter, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(LambdaGetter getter, LambdaSetter setter, Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_lambda<T,LambdaGetter,LambdaSetter> >(getter,setter, dav);
+        return p;
+    }
+
 
     /**
      * @brief create Attribue based on object and a getter/setter of this object
@@ -555,6 +578,17 @@ namespace AttributeFactory{
             std::vector<DerivedAttribute> derivedAttributes = {})
     {
         auto p = std::make_shared<AttributeT_Method_1<ObjType,T> >(obj, get, set, derivedAttributes);
+        return p;
+    }
+    template <class ObjType, class T, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(
+            ObjType* obj,
+            const T& (ObjType::* get)() const,
+            void (ObjType::* set)(const T&),
+            Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_Method_1<ObjType,T> >(obj, get, set, dav);
         return p;
     }
 
@@ -571,6 +605,17 @@ namespace AttributeFactory{
         auto p = std::make_shared<AttributeT_Method_2<ObjType,T> >(obj, get, set, derivedAttributes);
         return p;
     }
+    template <class ObjType, class T, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(
+            ObjType* obj,
+            T (ObjType::* get)() const,
+            void (ObjType::* set)(const T&),
+            Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_Method_2<ObjType,T> >(obj, get, set, dav);
+        return p;
+    }
 
     /**
      * @brief create Attribue based on object and a getter/setter of this object
@@ -583,6 +628,17 @@ namespace AttributeFactory{
             std::vector<DerivedAttribute> derivedAttributes = {})
     {
         auto p = std::make_shared<AttributeT_Method_3<ObjType,T> >(obj, get, set, derivedAttributes);
+        return p;
+    }
+    template <class ObjType, class T, class... Var>
+    std::shared_ptr<AttributeT<T> > makeAttribute(
+            ObjType* obj,
+            T (ObjType::* get)() const,
+            void (ObjType::* set)(T),
+            Var... derivedAttributes)
+    {
+        std::vector<DerivedAttribute> dav = {derivedAttributes...};
+        auto p = std::make_shared<AttributeT_Method_3<ObjType,T> >(obj, get, set, dav);
         return p;
     }
 }
