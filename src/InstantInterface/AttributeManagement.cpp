@@ -50,12 +50,12 @@ namespace InstantInterface {
 
     std::shared_ptr<TimedModifier> TimedModifier::getEquivalentTimedStaticModifier()
     {
-        return std::make_shared<TimedModifier>(getModifier()->getEquivalentStaticModifier(),getTemporal()->cloneLinear());
+        return std::make_shared<TimedModifier>(getModifier()->getEquivalentStaticModifier_currentState(),getTemporal()->cloneLinear());
     }
 
     std::shared_ptr<TimedModifier> TimedModifier::getEquivalentTimedValueModifier()
     {
-        return std::make_shared<TimedModifier>(getModifier()->getEquivalentValueModifier(), getTemporal()->clone());
+        return std::make_shared<TimedModifier>(getModifier()->getEquivalentStaticModifier_aimedState(), getTemporal()->clone());
     }
 
     std::shared_ptr<TimedModifier> TimedModifier::clone()
@@ -65,12 +65,12 @@ namespace InstantInterface {
 
     void TimedModifier::mutateToStaticModifier()
     {
-        modifier = modifier->getEquivalentStaticModifier();
+        modifier = modifier->getEquivalentStaticModifier_currentState();
     }
 
     void TimedModifier::mutateToValueModifier()
     {
-        modifier = modifier->getEquivalentValueModifier();
+        modifier = modifier->getEquivalentStaticModifier_aimedState();
     }
 
     std::unique_ptr<Temporal> makeSpeedTransition(float speed)
@@ -200,6 +200,9 @@ namespace InstantInterface {
 
         auto insertedInstance = timeMod->clone();
         timedModifiersCollection[paramId].push_back(insertedInstance);
+
+        updateRequirements[paramId] = true;
+
         return insertedInstance;
     }
 
@@ -211,13 +214,31 @@ namespace InstantInterface {
         }
     }
 
+    void DynamicConfiguration::notifyUpdateNeed(int paramId)
+    {
+        updateRequirements[paramId] = true;
+    }
+
     void DynamicConfiguration::apply(float elapsedTime)
     {
         for(auto& paramModsPair: timedModifiersCollection )
         {
             auto& timedModifs = paramModsPair.second;
+            int paramId = paramModsPair.first;
 
-            if(timedModifs.size()>0)
+            if(timedModifs.size() == 1
+                    && timedModifs[0]->getTemporal()->done()
+                    && !timedModifs[0]->getModifier()->isDynamic()
+                    && timedModifs[0]->getModifier()->isPersistent()
+                    && updateRequirements[paramId])
+            {
+                auto pTimedMod = timedModifs[0];
+                auto mixer = pTimedMod->getModifier()->getMixer();
+                pTimedMod->getTemporal()->update(elapsedTime); // we shouldn't need to do that because the mixing phase is over but maybe it is more coherent like that...
+                mixer->mix(*pTimedMod);
+                mixer->applyToAttribute();
+            }
+            else if(timedModifs.size()>0)
             {
                 auto mixer = timedModifs[0]->getModifier()->getMixer();
 
@@ -230,6 +251,8 @@ namespace InstantInterface {
                 //update the parameter
                 mixer->applyToAttribute();
             }
+
+            updateRequirements[paramId] = false;
 
             /* delete modifiers that have no influence any more
              */
@@ -258,7 +281,7 @@ namespace InstantInterface {
 
             if(timedModifs.size() == 1)
             {
-                if(timedModifs[0]->getTemporal()->done())
+                if(!timedModifs[0]->getModifier()->isPersistent() && timedModifs[0]->getTemporal()->done())
                 {
                     timedModifs.clear();
                 }
@@ -270,6 +293,5 @@ namespace InstantInterface {
     {
         timedModifiersCollection.clear();
     }
-
 
 }

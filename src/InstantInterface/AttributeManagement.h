@@ -238,14 +238,24 @@ public:
      * @brief getEquivalentStaticModifier returns a modifier which aims the current value
      * @return
      */
-    virtual std::shared_ptr<ParameterModifier> getEquivalentStaticModifier() = 0;
+    virtual std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_currentState() = 0;
 
     /**
      * @brief getEquivalentStaticModifier returns a modifier which aims the current at the current aimed value.
      * this is usefull in the case of StateParameterModifierValueT, where the aimed value can change in time.
      * @return
      */
-    virtual std::shared_ptr<ParameterModifier> getEquivalentValueModifier() = 0;
+    virtual std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_aimedState() = 0;
+
+
+    virtual bool isDynamic() const {
+        return false;
+    }
+
+    virtual bool isPersistent() const {
+        return false;
+    }
+
 };
 
 /**
@@ -343,12 +353,12 @@ public:
         return std::make_shared<ParameterModifierMixerT<ParamType> > ();
     }
 
-    std::shared_ptr<ParameterModifier> getEquivalentStaticModifier()
+    std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_currentState()
     {
         return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), getAttribute()->get());
     }
 
-    std::shared_ptr<ParameterModifier> getEquivalentValueModifier()
+    std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_aimedState()
     {
         return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), aimedValue());
     }
@@ -750,7 +760,6 @@ public:
      */
     std::shared_ptr<TimedModifier>  add(std::shared_ptr<TimedModifier> timeMod);
 
-
     /**
      * @brief add adds a list of mofifiers with a given duration \p duration.
      * TimedModifier instances are created based on the arguements and then added to the active timed modifiers.
@@ -773,6 +782,8 @@ public:
         };
     }
 
+    void notifyRequiredUpdate(int paramId);
+
     /**
      * @brief apply goes through all the registered instances of TimedModifier and updates the values of the associated parameters
      * @param elapsedTime
@@ -786,6 +797,7 @@ public:
 
 private:
     std::map<int, TimedModifierVec> timedModifiersCollection;
+    std::map<int, bool>  updateRequirements;
 };
 
 inline std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed){
