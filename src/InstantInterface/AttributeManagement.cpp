@@ -214,7 +214,7 @@ namespace InstantInterface {
         }
     }
 
-    void DynamicConfiguration::notifyUpdateNeed(int paramId)
+    void DynamicConfiguration::notifyRequiredUpdate(int paramId)
     {
         updateRequirements[paramId] = true;
     }
