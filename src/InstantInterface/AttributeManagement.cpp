@@ -294,4 +294,23 @@ namespace InstantInterface {
         timedModifiersCollection.clear();
     }
 
+    std::shared_ptr<InstantInterface::TimedModifier> makeImpulse(std::shared_ptr<InstantInterface::ParameterModifier> modifier, float duration)
+    {
+        return std::make_shared<TimedModifier>(modifier,makeTemporal(duration,TemporalFunctions::spline));
+    }
+
+    std::shared_ptr<Action> makeTransitionAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute transitionSpeed){
+        return AttributeFactory::makeAction([acts,&dc, transitionSpeed](){
+            dc.add(acts,1000.0f/(std::max(0.001f,transitionSpeed->get())));
+        });
+    }
+
+    std::shared_ptr<Action> makeImpulseAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute impulseSpeed){
+        return AttributeFactory::makeAction([acts,&dc, impulseSpeed](){
+            float impulseDuration = 1000.0f/(std::max(0.001f,impulseSpeed->get()));
+            for(auto modif : acts)
+                dc.add(makeImpulse(modif,impulseDuration));
+        });
+    }
+
 }

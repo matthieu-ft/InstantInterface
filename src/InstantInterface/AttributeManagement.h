@@ -800,11 +800,9 @@ private:
     std::map<int, bool>  updateRequirements;
 };
 
-inline std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed){
-    return AttributeFactory::makeAction([acts,&dc, transitionSpeed](){
-        dc.add(acts,1000.0f/(std::max(0.001f,transitionSpeed->get())));
-    });
-}
+std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed);
+
+std::shared_ptr<Action> makeImpulseAction( DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute impulseSpeed);
 
 
 /**
@@ -914,5 +912,7 @@ std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<AttributeT<ParamType>
 {
     return std::make_shared<TimedModifier>(makeValueModifier(attr,val),makeTemporal(duration,TemporalFunctions::spline));
 }
+
+std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<ParameterModifier> modifier, float duration);
 
 }
