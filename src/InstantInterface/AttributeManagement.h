@@ -188,6 +188,7 @@ private:
 namespace TemporalFunctions{
     //x should be between 0 and 1
     float spline(float x);
+    float halfSpline(float x);
 }
 
 
@@ -803,6 +804,7 @@ private:
 std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed);
 
 std::shared_ptr<Action> makeImpulseAction( DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute impulseSpeed);
+std::shared_ptr<Action> makeImmediateImpulseAction( DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute impulseSpeed);
 
 
 /**
@@ -914,5 +916,14 @@ std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<AttributeT<ParamType>
 }
 
 std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<ParameterModifier> modifier, float duration);
+
+template <class ParamType, class T2>
+std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<AttributeT<ParamType> > attr, T2 val, float duration)
+{
+    return std::make_shared<TimedModifier>(makeValueModifier(attr,val),makeTemporal(duration,TemporalFunctions::halfSpline));
+}
+
+std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<ParameterModifier> modifier, float duration);
+
 
 }

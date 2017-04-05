@@ -114,6 +114,12 @@ namespace InstantInterface {
         return output*0.6666666;
     }
 
+
+    float TemporalFunctions::halfSpline(float x)
+    {
+        return spline(x+0.5f);
+    }
+
     Temporal::Temporal():
         normalizedTime(0),
         speed(1),
@@ -299,6 +305,11 @@ namespace InstantInterface {
         return std::make_shared<TimedModifier>(modifier,makeTemporal(duration,TemporalFunctions::spline));
     }
 
+    std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<ParameterModifier> modifier, float duration)
+    {
+        return std::make_shared<TimedModifier>(modifier, makeTemporal(duration, TemporalFunctions::halfSpline));
+    }
+
     std::shared_ptr<Action> makeTransitionAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute transitionSpeed){
         return AttributeFactory::makeAction([acts,&dc, transitionSpeed](){
             dc.add(acts,1000.0f/(std::max(0.001f,transitionSpeed->get())));
@@ -312,5 +323,15 @@ namespace InstantInterface {
                 dc.add(makeImpulse(modif,impulseDuration));
         });
     }
+
+    std::shared_ptr<Action> makeImmediateImpulseAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute impulseSpeed)
+    {
+        return AttributeFactory::makeAction([acts,&dc, impulseSpeed](){
+            float impulseDuration = 1000.0f/(std::max(0.001f,impulseSpeed->get()));
+            for(auto modif : acts)
+                dc.add(makeImmediateImpulse(modif,impulseDuration));
+        });
+    }
+
 
 }
