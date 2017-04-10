@@ -188,11 +188,11 @@ void WebInterface::send_interface(websocketpp::connection_hdl hdl)
 {
     if (threaded)
     {
+        scoped_lock lock(parametersMutex);
         m_endpoint.send(hdl,structureCache,websocketpp::frame::opcode::text);
     }
     else
     {
-        scoped_lock lock(parametersMutex);
         m_endpoint.send(hdl,getStructureJsonString(),websocketpp::frame::opcode::text);
     }
     //after sending the interface we send the update of all the parameters, because the structure of the interface
