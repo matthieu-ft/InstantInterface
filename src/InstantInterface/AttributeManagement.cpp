@@ -44,6 +44,11 @@ namespace InstantInterface {
 
     TimedModifier::TimedModifier(): temporal() {}
 
+    void TimedModifier::update(float elapsedTime) {
+        getTemporal()->update(elapsedTime); // we shouldn't need to do that because the mixing phase is over but maybe it is more coherent like that...
+        getModifier()->mix(getTemporal()->getWeight());
+    }
+
     TimedModifier::TimedModifier(std::shared_ptr<StateModifier> mod, std::unique_ptr<Temporal> trans):
         temporal(std::move(trans)),
         modifier(mod) {}
@@ -240,23 +245,14 @@ namespace InstantInterface {
                     && updateRequirements[paramId])
             {
                 auto pTimedMod = timedModifs[0];
-                auto mixer = pTimedMod->getModifier()->getMixer();
-                pTimedMod->getTemporal()->update(elapsedTime); // we shouldn't need to do that because the mixing phase is over but maybe it is more coherent like that...
-                mixer->mix(*pTimedMod);
-                mixer->applyToAttribute();
+                pTimedMod->update(elapsedTime);
             }
             else if(timedModifs.size()>0)
             {
-                auto mixer = timedModifs[0]->getModifier()->getMixer();
-
                 for(auto pTimeMod : timedModifs)
                 {
-                    pTimeMod->getTemporal()->update(elapsedTime);
-                    mixer->mix(*pTimeMod);
+                    pTimeMod->update(elapsedTime);
                 }
-
-                //update the parameter
-                mixer->applyToAttribute();
             }
 
             updateRequirements[paramId] = false;

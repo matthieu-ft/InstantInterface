@@ -211,8 +211,6 @@ inline auto makePulse(float duration)
     return makeTemporal(duration,TemporalFunctions::spline);
 }
 
-class ParameterModifierMixer;
-
 /**
  * @brief The ParameterModifier class  stands is responsible for discribing a modification of a parameter.
  * It is characterized by an aimed value (which is only defined in childclasses because the type of the value has to be known).
@@ -223,12 +221,6 @@ class StateModifier
 public:
     StateModifier();
     virtual ~StateModifier();
-
-    /**
-     * @brief getMixer returns the mixer responsible for combining the contribution of the different modifiers for the same parameter
-     * @return
-     */
-    virtual std::shared_ptr<ParameterModifierMixer> getMixer() const = 0;
 
     /**
      * @brief getParameterId
@@ -248,6 +240,8 @@ public:
      * @return
      */
     virtual std::shared_ptr<StateModifier> getEquivalentStaticModifier_aimedState() = 0;
+
+    virtual void mix(float weight) = 0;
 
 
     virtual bool isDynamic() const {
@@ -272,6 +266,8 @@ public:
     TimedModifier();
 
     TimedModifier(StateModifierPtr mod, std::unique_ptr<Temporal> trans);
+
+    void update(float elapsedTime);
 
     /**
      * @brief getEquivalentTimedStaticModifier returns a TimedModifier that has the same temporal dynamic (clone of the temporal)
@@ -312,29 +308,29 @@ private:
     StateModifierPtr modifier;
 };
 
-/**
- * @brief The ParameterModifierMixer class is responsible for combining the output values of TimedModifier of the same parameter.
- * It has to be created every time anew for each new computation of the value of the parameter. First, you call mix() applied to each TimedModifier
- * instance that contributes to the computation. Then it is sufficient to call applyToAttribute() for the computation to be finalized and the attribute to be updated.
- * Its child templated class ParameterModifierMixerT knows the type of the parameter and therefore is able to do the computation with the correct type.
- * It is created by calling method ParameterModifier::getMixer().
- */
-class ParameterModifierMixer
-{
-public:
-    /**
-     * @brief mix, adds the contribution of the given timedModifier to the computation of the new value of the associated parameter
-     * @param timedModifier
-     */
-    virtual void mix(TimedModifier& timedModifier) = 0;
-    /**
-     * @brief applyToAttribute finalizes the computation and update the attribute with the new value
-     */
-    virtual void applyToAttribute() = 0;
-};
+///**
+// * @brief The ParameterModifierMixer class is responsible for combining the output values of TimedModifier of the same parameter.
+// * It has to be created every time anew for each new computation of the value of the parameter. First, you call mix() applied to each TimedModifier
+// * instance that contributes to the computation. Then it is sufficient to call applyToAttribute() for the computation to be finalized and the attribute to be updated.
+// * Its child templated class ParameterModifierMixerT knows the type of the parameter and therefore is able to do the computation with the correct type.
+// * It is created by calling method ParameterModifier::getMixer().
+// */
+//class ParameterModifierMixer
+//{
+//public:
+//    /**
+//     * @brief mix, adds the contribution of the given timedModifier to the computation of the new value of the associated parameter
+//     * @param timedModifier
+//     */
+//    virtual void mix(TimedModifier& timedModifier) = 0;
+//    /**
+//     * @brief applyToAttribute finalizes the computation and update the attribute with the new value
+//     */
+//    virtual void applyToAttribute() = 0;
+//};
 
 
-template <class ParamType> class ParameterModifierMixerT;
+//template <class ParamType> class ParameterModifierMixerT;
 template <class ParamType> class ParameterModifierValueT;
 
 /**
@@ -350,11 +346,6 @@ public:
     {}
 
     virtual ParamType aimedValue() const = 0;
-
-    std::shared_ptr<ParameterModifierMixer> getMixer() const
-    {
-        return std::make_shared<ParameterModifierMixerT<ParamType> > ();
-    }
 
     std::shared_ptr<StateModifier> getEquivalentStaticModifier_currentState()
     {
@@ -380,6 +371,19 @@ public:
     {
         return attr.lock();
     }
+
+    void mix(float transitionFactor) {
+        auto pAttr = attr.lock();
+        if(transitionFactor < 0)
+            return;
+
+        if(transitionFactor >= 1)
+            pAttr->set(aimedValue());
+        else
+            pAttr->set((1-transitionFactor)*pAttr->get() + transitionFactor * aimedValue());
+
+    }
+
 
 private:
     std::weak_ptr<AttributeT<ParamType> > attr;
@@ -697,52 +701,52 @@ std::shared_ptr<IndexedStateModifierT<ParamType> > makeStateValueModifier(std::s
     return std::make_shared<IndexedStateModifierT<ParamType> >(attr,vals);
 }
 
-/**
- * @brief see ParameterModifierMixer for more information
- */
-template <class ParamType>
-class ParameterModifierMixerT: public ParameterModifierMixer
-{
-public:
-    ParameterModifierMixerT():
-        temp(),
-        hasBeenInit(false),
-        attr()
-    {}
+///**
+// * @brief see ParameterModifierMixer for more information
+// */
+//template <class ParamType>
+//class ParameterModifierMixerT: public ParameterModifierMixer
+//{
+//public:
+//    ParameterModifierMixerT():
+//        temp(),
+//        hasBeenInit(false),
+//        attr()
+//    {}
 
-    virtual void mix(TimedModifier&  timedModif)
-    {
-        auto modifierT = std::static_pointer_cast<ParameterModifierT<ParamType> >(timedModif.getModifier());
-        float transitionFactor = timedModif.getTemporal()->getWeight();
-        if(hasBeenInit)
-        {
-            temp = (1-transitionFactor)*temp + transitionFactor * modifierT->aimedValue();
-        }
-        else
-        {
-            temp = modifierT->aimedValue();
-            hasBeenInit = true;
-            attr = modifierT->getAttribute();
-        }
-    }
+//    virtual void mix(TimedModifier&  timedModif)
+//    {
+//        auto modifierT = std::static_pointer_cast<ParameterModifierT<ParamType> >(timedModif.getModifier());
+//        float transitionFactor = timedModif.getTemporal()->getWeight();
+//        if(hasBeenInit)
+//        {
+//            temp = (1-transitionFactor)*temp + transitionFactor * modifierT->aimedValue();
+//        }
+//        else
+//        {
+//            temp = modifierT->aimedValue();
+//            hasBeenInit = true;
+//            attr = modifierT->getAttribute();
+//        }
+//    }
 
-    void applyToAttribute()
-    {
-        if(auto p = attr.lock())
-        {
-            p->set(temp);
-        }
-        else
-        {
-            std::cout<<"Parameter modifier mixer t, applyResult: couldn't lock attribute."<<std::endl;
-        }
-    }
+//    void applyToAttribute()
+//    {
+//        if(auto p = attr.lock())
+//        {
+//            p->set(temp);
+//        }
+//        else
+//        {
+//            std::cout<<"Parameter modifier mixer t, applyResult: couldn't lock attribute."<<std::endl;
+//        }
+//    }
 
-private:
-    ParamType temp;
-    bool hasBeenInit;
-    std::weak_ptr<AttributeT<ParamType> > attr;
-};
+//private:
+//    ParamType temp;
+//    bool hasBeenInit;
+//    std::weak_ptr<AttributeT<ParamType> > attr;
+//};
 
 /**
  * @brief The DynamicConfiguration class stores and manages all the active TimedModifiers instances.
