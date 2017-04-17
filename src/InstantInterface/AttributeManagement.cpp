@@ -44,7 +44,7 @@ namespace InstantInterface {
 
     TimedModifier::TimedModifier(): temporal() {}
 
-    TimedModifier::TimedModifier(std::shared_ptr<ParameterModifier> mod, std::unique_ptr<Temporal> trans):
+    TimedModifier::TimedModifier(std::shared_ptr<StateModifier> mod, std::unique_ptr<Temporal> trans):
         temporal(std::move(trans)),
         modifier(mod) {}
 
@@ -185,14 +185,15 @@ namespace InstantInterface {
         return false;
     }
 
-    ParameterModifier::ParameterModifier()
+    StateModifier::StateModifier()
     {}
 
-    ParameterModifier::~ParameterModifier() {}
+    StateModifier::~StateModifier() {}
 
     std::shared_ptr<TimedModifier> DynamicConfiguration::add(std::shared_ptr<TimedModifier> timeMod)
     {
-        int paramId = timeMod->getModifier()->getParameterId();
+        auto paramIds = timeMod->getModifier()->getParameterIds();
+        auto paramId = paramIds[0];
         auto modIt = timedModifiersCollection.find(paramId);
         if(modIt == timedModifiersCollection.end())
         {
@@ -300,12 +301,12 @@ namespace InstantInterface {
         timedModifiersCollection.clear();
     }
 
-    std::shared_ptr<InstantInterface::TimedModifier> makeImpulse(std::shared_ptr<InstantInterface::ParameterModifier> modifier, float duration)
+    std::shared_ptr<InstantInterface::TimedModifier> makeImpulse(std::shared_ptr<InstantInterface::StateModifier> modifier, float duration)
     {
         return std::make_shared<TimedModifier>(modifier,makeTemporal(duration,TemporalFunctions::spline));
     }
 
-    std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<ParameterModifier> modifier, float duration)
+    std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<StateModifier> modifier, float duration)
     {
         return std::make_shared<TimedModifier>(modifier, makeTemporal(duration, TemporalFunctions::halfSpline));
     }

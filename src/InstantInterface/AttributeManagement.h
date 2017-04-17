@@ -136,6 +136,7 @@ private:
     float speed;
     bool modificationDone;
 };
+typedef std::shared_ptr<Temporal> TemporalPtr;
 
 /**
  * @brief FunctionTemporal is a Temporal which weight is specified by a function of (normalized) time.
@@ -217,11 +218,11 @@ class ParameterModifierMixer;
  * It is characterized by an aimed value (which is only defined in childclasses because the type of the value has to be known).
  * It contains no information about the temporal dynamic of the modification
  */
-class ParameterModifier
+class StateModifier
 {
 public:
-    ParameterModifier();
-    virtual ~ParameterModifier();
+    StateModifier();
+    virtual ~StateModifier();
 
     /**
      * @brief getMixer returns the mixer responsible for combining the contribution of the different modifiers for the same parameter
@@ -233,20 +234,20 @@ public:
      * @brief getParameterId
      * @return id of the parameter
      */
-    virtual int getParameterId() const = 0;
+    virtual std::vector<int> getParameterIds() const = 0;
 
     /**
      * @brief getEquivalentStaticModifier returns a modifier which aims the current value
      * @return
      */
-    virtual std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_currentState() = 0;
+    virtual std::shared_ptr<StateModifier> getEquivalentStaticModifier_currentState() = 0;
 
     /**
      * @brief getEquivalentStaticModifier returns a modifier which aims the current at the current aimed value.
      * this is usefull in the case of StateParameterModifierValueT, where the aimed value can change in time.
      * @return
      */
-    virtual std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_aimedState() = 0;
+    virtual std::shared_ptr<StateModifier> getEquivalentStaticModifier_aimedState() = 0;
 
 
     virtual bool isDynamic() const {
@@ -258,6 +259,7 @@ public:
     }
 
 };
+typedef std::shared_ptr<StateModifier> StateModifierPtr;
 
 /**
  * @brief The TimedModifier class is a combination of a ParameterModifier and a Temporal. The Temporal describes the temporal dynamics
@@ -269,7 +271,7 @@ public:
 
     TimedModifier();
 
-    TimedModifier(std::shared_ptr<ParameterModifier> mod, std::unique_ptr<Temporal> trans);
+    TimedModifier(StateModifierPtr mod, std::unique_ptr<Temporal> trans);
 
     /**
      * @brief getEquivalentTimedStaticModifier returns a TimedModifier that has the same temporal dynamic (clone of the temporal)
@@ -303,11 +305,11 @@ public:
     void mutateToValueModifier();
 
     std::unique_ptr<Temporal>& getTemporal() { return temporal;}
-    std::shared_ptr<ParameterModifier> getModifier() { return modifier; }
+    std::shared_ptr<StateModifier> getModifier() { return modifier; }
 
 private:
     std::unique_ptr<Temporal> temporal;
-    std::shared_ptr<ParameterModifier> modifier;
+    StateModifierPtr modifier;
 };
 
 /**
@@ -339,11 +341,11 @@ template <class ParamType> class ParameterModifierValueT;
  * @brief see ParameterModifier for more information
  */
 template <class ParamType>
-class ParameterModifierT : public ParameterModifier
+class ParameterModifierT : public StateModifier
 {
 public:
     ParameterModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr):
-        ParameterModifier(),
+        StateModifier(),
         attr(pAttr)
     {}
 
@@ -354,24 +356,24 @@ public:
         return std::make_shared<ParameterModifierMixerT<ParamType> > ();
     }
 
-    std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_currentState()
+    std::shared_ptr<StateModifier> getEquivalentStaticModifier_currentState()
     {
         return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), getAttribute()->get());
     }
 
-    std::shared_ptr<ParameterModifier> getEquivalentStaticModifier_aimedState()
+    std::shared_ptr<StateModifier> getEquivalentStaticModifier_aimedState()
     {
         return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), aimedValue());
     }
 
-    int getParameterId() const
+    std::vector<int> getParameterIds() const
     {
         int id = -1;
         if(auto p = attr.lock())
         {
             id = p->getId();
         }
-        return id;
+        return {id};
     }
 
     std::shared_ptr<AttributeT<ParamType> > getAttribute() const
@@ -418,7 +420,7 @@ private:
  * The states are indexed from 0 to N-1, in the order of the values in the state vector, N being the length of the vector.
  */
 template <class ParamType>
-class StateParameterModifierValueT: public ParameterModifierT<ParamType>
+class IndexedStateModifierT: public ParameterModifierT<ParamType>
 {
 public:
 
@@ -427,7 +429,7 @@ public:
      * @param pAttr attribute that the modifier being currently created will be in charge of
      * @param vals  state vector, with the values orders in increasing order
      */
-    StateParameterModifierValueT(std::shared_ptr<AttributeT<ParamType> > pAttr, const std::vector<ParamType>& vals):
+    IndexedStateModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr, const std::vector<ParamType>& vals):
         ParameterModifierT<ParamType>(pAttr),
         values(vals),
         aimedIndex(0),
@@ -690,9 +692,9 @@ std::shared_ptr<ParameterModifierValueT<ParamType> > makeValueModifier(std::shar
  * to be stored in increasing order
  */
 template <class ParamType, class T2>
-std::shared_ptr<StateParameterModifierValueT<ParamType> > makeStateValueModifier(std::shared_ptr<AttributeT<ParamType> > attr, std::vector<T2> vals)
+std::shared_ptr<IndexedStateModifierT<ParamType> > makeStateValueModifier(std::shared_ptr<AttributeT<ParamType> > attr, std::vector<T2> vals)
 {
-    return std::make_shared<StateParameterModifierValueT<ParamType> >(attr,vals);
+    return std::make_shared<IndexedStateModifierT<ParamType> >(attr,vals);
 }
 
 /**
@@ -750,7 +752,7 @@ class DynamicConfiguration
 {
 public:
 
-    typedef std::vector< std::shared_ptr<ParameterModifier> > ModifierVec;
+    typedef std::vector< std::shared_ptr<StateModifier> > ModifierVec;
     typedef std::vector< std::shared_ptr<TimedModifier> > TimedModifierVec;
 
     /**
@@ -844,7 +846,7 @@ class StateParameterModifierManagerT: public StateParameterModifierManager
 {
 public:
 
-    StateParameterModifierManagerT(std::shared_ptr<StateParameterModifierValueT<ParamType> > mod):
+    StateParameterModifierManagerT(std::shared_ptr<IndexedStateModifierT<ParamType> > mod):
         modifier(mod)
     {}
 
@@ -865,7 +867,7 @@ public:
     }
 
 private:
-    std::shared_ptr<StateParameterModifierValueT<ParamType> > modifier;
+    std::shared_ptr<IndexedStateModifierT<ParamType> > modifier;
     std::shared_ptr<TimedModifier> lastTimedModifier;
 
     /**
@@ -915,7 +917,7 @@ std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<AttributeT<ParamType>
     return std::make_shared<TimedModifier>(makeValueModifier(attr,val),makeTemporal(duration,TemporalFunctions::spline));
 }
 
-std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<ParameterModifier> modifier, float duration);
+std::shared_ptr<TimedModifier> makeImpulse(std::shared_ptr<StateModifier> modifier, float duration);
 
 template <class ParamType, class T2>
 std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<AttributeT<ParamType> > attr, T2 val, float duration)
@@ -923,7 +925,7 @@ std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<AttributeT<P
     return std::make_shared<TimedModifier>(makeValueModifier(attr,val),makeTemporal(duration,TemporalFunctions::halfSpline));
 }
 
-std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<ParameterModifier> modifier, float duration);
+std::shared_ptr<TimedModifier> makeImmediateImpulse(std::shared_ptr<StateModifier> modifier, float duration);
 
 
 }
