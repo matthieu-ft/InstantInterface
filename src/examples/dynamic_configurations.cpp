@@ -87,19 +87,19 @@ int main(int argc, char* argv[])
      */
 
     //create a configuration where the param1 has value 50 and param2 value 100
-    DynamicConfiguration::ModifierVec conf1 = {
+    std::vector<StateModifierPtr> conf1 = {
                   makeValueModifier(param1,50),
                   makeValueModifier(param2,100)
               };
 
     //create a configuration where the param1 has value 1 and param2 value 400
-    DynamicConfiguration::ModifierVec conf2 = {
+    std::vector<StateModifierPtr> conf2 = {
                   makeValueModifier(param1,1),
                   makeValueModifier(param2,400)
               };
 
     //create a configuration where the param2 has value 13 while no requirement is set on param1
-    DynamicConfiguration::ModifierVec conf3 = {
+    std::vector<StateModifierPtr> conf3 = {
                   makeValueModifier(param2,13)
               };
 

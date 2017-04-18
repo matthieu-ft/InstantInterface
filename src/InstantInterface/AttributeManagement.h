@@ -37,6 +37,7 @@
 #include "Attributes.h"
 
 #include <vector>
+#include <list>
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -307,6 +308,9 @@ private:
     std::unique_ptr<Temporal> temporal;
     StateModifierPtr modifier;
 };
+
+typedef std::shared_ptr<TimedModifier> TimedModifierPtr;
+typedef std::weak_ptr<TimedModifier> TimedModifierWeakPtr;
 
 ///**
 // * @brief The ParameterModifierMixer class is responsible for combining the output values of TimedModifier of the same parameter.
@@ -756,8 +760,8 @@ class DynamicConfiguration
 {
 public:
 
-    typedef std::vector< std::shared_ptr<StateModifier> > ModifierVec;
-    typedef std::vector< std::shared_ptr<TimedModifier> > TimedModifierVec;
+    typedef std::list< std::shared_ptr<StateModifier> > ModifierVec;
+    typedef std::list< std::shared_ptr<TimedModifier> > TimedModifierVec;
 
     /**
      * @brief add  adds a deep copy of the TimedModifier instance \p timeMod used as argument to the active timed modifiers.
@@ -765,7 +769,7 @@ public:
      * @param timeMod timed modifier
      * @return shared_ptr to the deep copy of \p timeMod
      */
-    std::shared_ptr<TimedModifier>  add(std::shared_ptr<TimedModifier> timeMod);
+    std::shared_ptr<TimedModifier>  add(TimedModifierPtr timeMod);
 
     /**
      * @brief add adds a list of mofifiers with a given duration \p duration.
@@ -773,9 +777,9 @@ public:
      * @param mods vector of modifiers
      * @param duration  duration of the transition
      */
-    void add(const ModifierVec& mods, float duration);
+    void add(const std::vector<StateModifierPtr>& mods, float duration);
 
-    auto makeTransitionLambda(ModifierVec config, float duration)
+    auto makeTransitionLambda(const std::vector<StateModifierPtr>& config, float duration)
     {
         return [this, config, duration](){
             this->add(config,duration);
@@ -804,13 +808,14 @@ public:
 
 private:
     std::map<int, TimedModifierVec> timedModifiersCollection;
+    std::list<TimedModifierWeakPtr> timedModifiers;
     std::map<int, bool>  updateRequirements;
 };
 
-std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute transitionSpeed);
+std::shared_ptr<Action> makeTransitionAction (DynamicConfiguration& dc, const std::vector<StateModifierPtr> & acts, FloatAttribute transitionSpeed);
 
-std::shared_ptr<Action> makeImpulseAction( DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute impulseSpeed);
-std::shared_ptr<Action> makeImmediateImpulseAction( DynamicConfiguration& dc, const DynamicConfiguration::ModifierVec& acts, FloatAttribute impulseSpeed);
+std::shared_ptr<Action> makeImpulseAction( DynamicConfiguration& dc, const std::vector<StateModifierPtr> & acts, FloatAttribute impulseSpeed);
+std::shared_ptr<Action> makeImmediateImpulseAction( DynamicConfiguration& dc, const std::vector<StateModifierPtr> & acts, FloatAttribute impulseSpeed);
 
 
 /**

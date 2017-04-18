@@ -195,30 +195,43 @@ namespace InstantInterface {
 
     StateModifier::~StateModifier() {}
 
-    std::shared_ptr<TimedModifier> DynamicConfiguration::add(std::shared_ptr<TimedModifier> timeMod)
+    std::shared_ptr<TimedModifier> DynamicConfiguration::add(TimedModifierPtr timeMod)
     {
         auto paramIds = timeMod->getModifier()->getParameterIds();
-        auto paramId = paramIds[0];
-        auto modIt = timedModifiersCollection.find(paramId);
-        if(modIt == timedModifiersCollection.end())
+
+        for(auto id : paramIds)
         {
-            timedModifiersCollection[paramId] = {};
-            //modifiers[paramId] = {};
+            auto modIt = timedModifiersCollection.find(id);
+            if(modIt == timedModifiersCollection.end())
+            {
+                timedModifiersCollection[id] = {};
+            }
         }
-        if(timedModifiersCollection[paramId].size() == 0)
+
+        auto paramId = paramIds[0];
+
+        if(paramIds.size() == 1
+                && timedModifiersCollection[paramId].size() == 0 )
         {
-            timedModifiersCollection[paramId].push_back(timeMod->getEquivalentTimedStaticModifier());
+            auto staticEquivalent = timeMod->getEquivalentTimedStaticModifier();
+            timedModifiersCollection[paramId].push_back(staticEquivalent);
+            timedModifiers.push_back(staticEquivalent);
         }
 
         auto insertedInstance = timeMod->clone();
-        timedModifiersCollection[paramId].push_back(insertedInstance);
 
-        updateRequirements[paramId] = true;
+        for(auto id : paramIds)
+        {
+            timedModifiersCollection[id].push_back(insertedInstance);
+            updateRequirements[paramId] = true;
+        }
+
+        timedModifiers.push_back(insertedInstance);
 
         return insertedInstance;
     }
 
-    void DynamicConfiguration::add(const DynamicConfiguration::ModifierVec &mods, float duration)
+    void DynamicConfiguration::add(const std::vector<StateModifierPtr> &mods, float duration)
     {
         for(auto mod: mods)
         {
@@ -233,29 +246,45 @@ namespace InstantInterface {
 
     void DynamicConfiguration::apply(float elapsedTime)
     {
+
+        /*
+         * apply updates
+         */
+        auto weakTmIt = timedModifiers.begin();
+        while(weakTmIt != timedModifiers.end())
+        {
+            auto pTm = weakTmIt->lock();
+            if(!pTm)
+                // if pTm is a null ptr, it means that there is no shared_ptr
+                // pointing to the object
+                // in the timed modifier map, so that it doesn't need to be applied anymore
+                // and can be removed from the list
+            {
+                weakTmIt = timedModifiers.erase(weakTmIt);
+                continue;
+            }
+
+            pTm->update(elapsedTime);
+            weakTmIt++;
+        }
+
         for(auto& paramModsPair: timedModifiersCollection )
         {
             auto& timedModifs = paramModsPair.second;
             int paramId = paramModsPair.first;
 
-            if(timedModifs.size() == 1
-                    && timedModifs[0]->getTemporal()->done()
-                    && !timedModifs[0]->getModifier()->isDynamic()
-                    && timedModifs[0]->getModifier()->isPersistent()
-                    && updateRequirements[paramId])
-            {
-                auto pTimedMod = timedModifs[0];
-                pTimedMod->update(elapsedTime);
-            }
-            else if(timedModifs.size()>0)
-            {
-                for(auto pTimeMod : timedModifs)
-                {
-                    pTimeMod->update(elapsedTime);
-                }
-            }
+//            if(timedModifs.size() == 1
+//                    && timedModifs.front()->getTemporal()->done()
+//                    && !timedModifs.front()->getModifier()->isDynamic()
+//                    && timedModifs.front()->getModifier()->isPersistent()
+//                    && updateRequirements[paramId])
+//            {
+//                auto pTimedMod = timedModifs.front();
+//                pTimedMod->update(elapsedTime);
+//            }
 
             updateRequirements[paramId] = false;
+
 
             /* delete modifiers that have no influence any more
              */
@@ -278,13 +307,11 @@ namespace InstantInterface {
                 ++timeModIt;
             }
 
-            //we let at least one non pulse finished element at the beginning (if there is one), in case there are pulse afterwards
-
             timedModifs.erase(timedModifs.begin(), splitIt);
 
             if(timedModifs.size() == 1)
             {
-                if(!timedModifs[0]->getModifier()->isPersistent() && timedModifs[0]->getTemporal()->done())
+                if(!timedModifs.front()->getModifier()->isPersistent() && timedModifs.front()->getTemporal()->done())
                 {
                     timedModifs.clear();
                 }
@@ -307,13 +334,13 @@ namespace InstantInterface {
         return std::make_shared<TimedModifier>(modifier, makeTemporal(duration, TemporalFunctions::halfSpline));
     }
 
-    std::shared_ptr<Action> makeTransitionAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute transitionSpeed){
+    std::shared_ptr<Action> makeTransitionAction(DynamicConfiguration &dc, const std::vector<StateModifierPtr> &acts, FloatAttribute transitionSpeed){
         return AttributeFactory::makeAction([acts,&dc, transitionSpeed](){
             dc.add(acts,1000.0f/(std::max(0.001f,transitionSpeed->get())));
         });
     }
 
-    std::shared_ptr<Action> makeImpulseAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute impulseSpeed){
+    std::shared_ptr<Action> makeImpulseAction(DynamicConfiguration &dc, const std::vector<StateModifierPtr> &acts, FloatAttribute impulseSpeed){
         return AttributeFactory::makeAction([acts,&dc, impulseSpeed](){
             float impulseDuration = 1000.0f/(std::max(0.001f,impulseSpeed->get()));
             for(auto modif : acts)
@@ -321,7 +348,7 @@ namespace InstantInterface {
         });
     }
 
-    std::shared_ptr<Action> makeImmediateImpulseAction(DynamicConfiguration &dc, const DynamicConfiguration::ModifierVec &acts, FloatAttribute impulseSpeed)
+    std::shared_ptr<Action> makeImmediateImpulseAction(DynamicConfiguration &dc, const std::vector<StateModifierPtr> &acts, FloatAttribute impulseSpeed)
     {
         return AttributeFactory::makeAction([acts,&dc, impulseSpeed](){
             float impulseDuration = 1000.0f/(std::max(0.001f,impulseSpeed->get()));
