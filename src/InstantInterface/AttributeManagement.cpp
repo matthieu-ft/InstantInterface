@@ -322,6 +322,8 @@ namespace InstantInterface {
     void DynamicConfiguration::reset()
     {
         timedModifiersCollection.clear();
+        timedModifiers.clear();
+        updateRequirements.clear();
     }
 
     std::shared_ptr<InstantInterface::TimedModifier> makeImpulse(std::shared_ptr<InstantInterface::StateModifier> modifier, float duration)

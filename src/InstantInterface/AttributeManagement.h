@@ -341,12 +341,13 @@ template <class ParamType> class ParameterModifierValueT;
  * @brief see ParameterModifier for more information
  */
 template <class ParamType>
-class ParameterModifierT : public StateModifier
+class ParameterModifierT : public StateModifier, public std::enable_shared_from_this<ParameterModifierT<ParamType> >
 {
 public:
     ParameterModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr):
         StateModifier(),
-        attr(pAttr)
+        attr(pAttr),
+        persistence(false)
     {}
 
     virtual ParamType aimedValue() const = 0;
@@ -388,9 +389,20 @@ public:
 
     }
 
+    std::shared_ptr<ParameterModifierT<ParamType> > setPersistence(bool v){
+        persistence = v;
+        return this->shared_from_this();
+    }
+
+
+    virtual bool isPersistent() const {
+        return persistence;
+    }
+
 
 private:
     std::weak_ptr<AttributeT<ParamType> > attr;
+    bool persistence;
 };
 
 
