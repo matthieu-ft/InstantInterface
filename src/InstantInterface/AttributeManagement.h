@@ -335,16 +335,16 @@ typedef std::weak_ptr<TimedModifier> TimedModifierWeakPtr;
 
 
 //template <class ParamType> class ParameterModifierMixerT;
-template <class ParamType> class ParameterModifierValueT;
+template <class ParamType> class ParameterModifierT;
 
 /**
  * @brief see ParameterModifier for more information
  */
 template <class ParamType>
-class ParameterModifierT : public StateModifier, public std::enable_shared_from_this<ParameterModifierT<ParamType> >
+class ParameterModifierBaseT : public StateModifier, public std::enable_shared_from_this<ParameterModifierBaseT<ParamType> >
 {
 public:
-    ParameterModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr):
+    ParameterModifierBaseT(std::shared_ptr<AttributeT<ParamType> > pAttr):
         StateModifier(),
         attr(pAttr),
         persistence(false)
@@ -354,12 +354,12 @@ public:
 
     std::shared_ptr<StateModifier> getEquivalentStaticModifier_currentState()
     {
-        return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), getAttribute()->get());
+        return std::make_shared<ParameterModifierT<ParamType> > (getAttribute(), getAttribute()->get());
     }
 
     std::shared_ptr<StateModifier> getEquivalentStaticModifier_aimedState()
     {
-        return std::make_shared<ParameterModifierValueT<ParamType> > (getAttribute(), aimedValue());
+        return std::make_shared<ParameterModifierT<ParamType> > (getAttribute(), aimedValue());
     }
 
     std::vector<int> getParameterIds() const
@@ -389,7 +389,7 @@ public:
 
     }
 
-    std::shared_ptr<ParameterModifierT<ParamType> > setPersistence(bool v){
+    std::shared_ptr<ParameterModifierBaseT<ParamType> > setPersistence(bool v){
         persistence = v;
         return this->shared_from_this();
     }
@@ -410,7 +410,7 @@ private:
  * @brief the ParameterModifierValueT class is a parameter modifier which aimed value is constant.
  */
 template <class ParamType>
-class ParameterModifierValueT : public ParameterModifierT<ParamType>
+class ParameterModifierT : public ParameterModifierBaseT<ParamType>
 {
 public:
     /**
@@ -418,8 +418,8 @@ public:
      * @param pAttr  attribute that modifier being currently created will be in charge of
      * @param val  aimed value of the modifier
      */
-    ParameterModifierValueT(std::shared_ptr<AttributeT<ParamType> > pAttr, ParamType val):
-        ParameterModifierT<ParamType>(pAttr),
+    ParameterModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr, ParamType val):
+        ParameterModifierBaseT<ParamType>(pAttr),
         _aimedValue(val)
     {}
 
@@ -440,7 +440,7 @@ private:
  * The states are indexed from 0 to N-1, in the order of the values in the state vector, N being the length of the vector.
  */
 template <class ParamType>
-class IndexedStateModifierT: public ParameterModifierT<ParamType>
+class IndexedStateModifierT: public ParameterModifierBaseT<ParamType>
 {
 public:
 
@@ -450,7 +450,7 @@ public:
      * @param vals  state vector, with the values orders in increasing order
      */
     IndexedStateModifierT(std::shared_ptr<AttributeT<ParamType> > pAttr, const std::vector<ParamType>& vals):
-        ParameterModifierT<ParamType>(pAttr),
+        ParameterModifierBaseT<ParamType>(pAttr),
         values(vals),
         aimedIndex(0),
         bDiscardLastAimedIndex(true)
@@ -702,9 +702,9 @@ std::unique_ptr<Temporal> makeDurationTransition(float duration);
  * @brief  creates a value modifier for the attribute \p attr that will modify it to the aimed value \p val
  */
 template <class ParamType, class T2>
-std::shared_ptr<ParameterModifierValueT<ParamType> > makeValueModifier(std::shared_ptr<AttributeT<ParamType> > attr, T2 val)
+std::shared_ptr<ParameterModifierT<ParamType> > makeValueModifier(std::shared_ptr<AttributeT<ParamType> > attr, T2 val)
 {
-    return std::make_shared<ParameterModifierValueT<ParamType> >(attr, val);
+    return std::make_shared<ParameterModifierT<ParamType> >(attr, val);
 }
 
 /**
