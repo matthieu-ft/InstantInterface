@@ -70,6 +70,9 @@ void AttributeT<T>::set(T value)
 
     _set(filteredValue);
 
+    for(auto const& listener : listeners)
+        listener.second(this->shared_from_this());
+
     for(auto& fun: _derivedAttributes)
         fun();
 }
@@ -165,6 +168,20 @@ template <class T>
 TypeValue AttributeT<T>::getTypeValue() const
 {
     return getValueFromType<T>();
+}
+
+template <class T>
+void AttributeT<T>::addListener(void * ptr, std::function<void(Ptr)> listener)
+{
+    listeners[ptr] = listener;
+}
+
+template <class T>
+void AttributeT<T>::removeListener(void * ptr)
+{
+    auto it = listeners.find(ptr);
+    if(it!=listeners.end())
+        listeners.erase(it);
 }
 
 }

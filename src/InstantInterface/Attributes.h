@@ -34,11 +34,14 @@
 
 #pragma once
 
+#include <opencv2/core.hpp>
+
 #include <cstdlib>
 #include <memory>
 #include <vector>
-#include <opencv2/core.hpp>
 #include <string>
+#include <functional>
+#include <map>
 
 namespace InstantInterface {
 
@@ -206,6 +209,9 @@ public:
 
     TypeValue getTypeValue() const;
 
+    void addListener(void*,  std::function<void(Ptr)>);
+    void removeListener(void*);
+
 
 protected:
     virtual void _set(T value) = 0;
@@ -216,6 +222,7 @@ private:
     bool _isPeriodic;
     std::vector<DerivedAttribute> _derivedAttributes;
     std::string _name;
+    std::map<void*, std::function<void(Ptr) > > listeners;
 };
 
 typedef std::shared_ptr<AttributeT<float> > FloatAttribute;
