@@ -124,7 +124,7 @@ public:
      * @brief set value of the attribute
      * @param value
      */
-    void set(T value);
+    void set(T value, bool notifyUpdate = true);
 
     /**
      * @brief get the value of the attribute

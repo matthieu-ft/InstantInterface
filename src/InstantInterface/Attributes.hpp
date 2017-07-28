@@ -57,7 +57,7 @@ AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
 {}
 
 template <class T>
-void AttributeT<T>::set(T value)
+void AttributeT<T>::set(T value, bool notifyUpdate)
 {
     T filteredValue = value;
     if(_enforceExtrema)
@@ -70,8 +70,9 @@ void AttributeT<T>::set(T value)
 
     _set(filteredValue);
 
-    for(auto const& listener : listeners)
-        listener.second(this->shared_from_this());
+    if(notifyUpdate)
+        for(auto const& listener : listeners)
+            listener.second(this->shared_from_this());
 
     for(auto& fun: _derivedAttributes)
         fun();
