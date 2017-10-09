@@ -107,7 +107,7 @@ typedef std::shared_ptr<Attribute> AttributePtr;
 class Attribute
 {
 public:
-   virtual AttributePtr makeFakeCopy() = 0;
+   virtual AttributePtr makeFakeCopy(const std::string &name_extension = "") = 0;
    virtual TypeValue getTypeValue() const = 0;
    bool isFloat();
 };
@@ -206,9 +206,9 @@ public:
 
     const std::string& getName() const;
 
-    AttributePtr makeFakeCopy();
+    AttributePtr makeFakeCopy(const std::string &name_extension);
 
-    Ptr makeFakeCopyT();
+    Ptr makeFakeCopyT(const std::string &name_extension);
 
     TypeValue getTypeValue() const;
 

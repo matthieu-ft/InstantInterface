@@ -196,13 +196,15 @@ void AttributeT<T>::removeListener(void * ptr)
 }
 
 template <class T>
-AttributePtr AttributeT<T>::makeFakeCopy() {
-    return this->makeFakeCopyT();
+AttributePtr AttributeT<T>::makeFakeCopy(const std::string &name_extension) {
+    return this->makeFakeCopyT(name_extension);
 }
 
 template <class T>
-typename AttributeT<T>::Ptr AttributeT<T>::makeFakeCopyT() {
-    return std::make_shared<FakeAttributeT<T> > (*this);
+typename AttributeT<T>::Ptr AttributeT<T>::makeFakeCopyT(const std::string& name_extension) {
+    auto attr = std::make_shared<FakeAttributeT<T> > (*this);
+    attr->setName(attr->getName() + name_extension);
+    return attr;
 }
 
 
