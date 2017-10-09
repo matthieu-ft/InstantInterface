@@ -42,6 +42,20 @@ template <class T>
 int IndexedBase<T>::next_id = 0;
 
 
+template <class T>
+AttributeT<T>::AttributeT(AttributeT<T>& attribute):
+    AttributeT<T>()
+{
+    _min = attribute._min;
+    _max = attribute._max;
+    _hasMin = attribute._hasMin;
+    _hasMax = attribute._hasMax;
+    _enforceExtrema = attribute._enforceExtrema;
+    _isPeriodic = attribute._isPeriodic;
+    _derivedAttributes = {};
+    _name = attribute._name;
+    listeners = {};
+}
 
 template <class T>
 AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
@@ -55,6 +69,8 @@ AttributeT<T>::AttributeT(std::vector<DerivedAttribute> derAtt):
     _derivedAttributes(derAtt),
     _name("empty name")
 {}
+
+
 
 template <class T>
 void AttributeT<T>::set(T value, bool notifyUpdate)
@@ -160,12 +176,6 @@ const std::string& AttributeT<T>::getName() const
 }
 
 template <class T>
-StateAttributePtr AttributeT<T>::makeStateAttribute()
-{
-    return std::make_shared<StateAttributeT<T> > (this->shared_from_this());
-}
-
-template <class T>
 TypeValue AttributeT<T>::getTypeValue() const
 {
     return getValueFromType<T>();
@@ -184,5 +194,16 @@ void AttributeT<T>::removeListener(void * ptr)
     if(it!=listeners.end())
         listeners.erase(it);
 }
+
+template <class T>
+AttributePtr AttributeT<T>::makeFakeCopy() {
+    return this->makeFakeCopyT();
+}
+
+template <class T>
+typename AttributeT<T>::Ptr AttributeT<T>::makeFakeCopyT() {
+    return std::make_shared<FakeAttributeT<T> > (*this);
+}
+
 
 }

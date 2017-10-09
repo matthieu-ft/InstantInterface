@@ -101,16 +101,16 @@ TypeValue getValueFromType();
  * nature of the attribute (ptr to a variable, getter setter, lambda functions...)
  */
 
-class StateAttribute;
-typedef std::shared_ptr<StateAttribute> StateAttributePtr;
+class Attribute;
+typedef std::shared_ptr<Attribute> AttributePtr;
 
 class Attribute
 {
 public:
-   virtual StateAttributePtr makeStateAttribute() = 0;
+   virtual AttributePtr makeFakeCopy() = 0;
    virtual TypeValue getTypeValue() const = 0;
+   bool isFloat();
 };
-typedef std::shared_ptr<Attribute> AttributePtr;
 
 template <typename T>
 class AttributeT : public IndexedModifiable, public std::enable_shared_from_this<AttributeT<T> >, public Attribute
@@ -118,6 +118,7 @@ class AttributeT : public IndexedModifiable, public std::enable_shared_from_this
 public:
     typedef std::shared_ptr<AttributeT<T> > Ptr;
 
+    AttributeT(AttributeT<T>& attribute);
     AttributeT(std::vector<DerivedAttribute> _derivedAttributes = {});
 
     /**
@@ -205,7 +206,9 @@ public:
 
     const std::string& getName() const;
 
-    StateAttributePtr makeStateAttribute();
+    AttributePtr makeFakeCopy();
+
+    Ptr makeFakeCopyT();
 
     TypeValue getTypeValue() const;
 
@@ -229,73 +232,33 @@ typedef std::shared_ptr<AttributeT<float> > FloatAttribute;
 typedef std::shared_ptr<AttributeT<bool> > BoolAttribute;
 typedef std::shared_ptr<AttributeT<int> > IntAttribute;
 
-
-class StateAttribute
-{
-public:
-    virtual void read(const cv::FileNode &node) = 0;
-    virtual void write(cv::FileStorage &fs) const = 0;
-    virtual void saveState() = 0;
-    virtual void forceState() = 0;
-};
-
 template <typename T>
-class StateAttributeT : public StateAttribute
+class FakeAttributeT : public AttributeT<T>
 {
 public:
 
     typedef typename AttributeT<T>::Ptr AttributeTPtr;
 
-    StateAttributeT(std::shared_ptr<AttributeT<T> > pAttribute):
-        attribute(pAttribute),
-        state(pAttribute->get())
+    FakeAttributeT(AttributeT<T>& attribute):
+        AttributeT<T>(attribute),
+        mValue(attribute.get())
     {}
 
-    void read(const cv::FileNode &node)
-    {
-        AttributeTPtr ptr;
-        if(ptr = getAttribute())
-        {
-            node[ptr->getName()] >> state;
-        }
+    /**
+     * @brief get the value of the attribute
+     * @return
+     */
+    T get() {
+        return mValue;
     }
 
-    void write(cv::FileStorage &fs) const
-    {
-
-        AttributeTPtr ptr;
-        if(ptr = getAttribute())
-        {
-            fs << ptr->getName() << state;
-        }
-    }
-
-    void saveState()
-    {
-        AttributeTPtr ptr;
-        if(ptr = getAttribute())
-        {
-            state = ptr->get();
-        }
-    }
-
-    void forceState()
-    {
-        AttributeTPtr ptr;
-        if(ptr = getAttribute())
-        {
-            ptr->set(state);
-        }
+protected:
+    void _set(T value) {
+        mValue = value;
     }
 
 private:
-    AttributeTPtr getAttribute() const
-    {
-        return attribute.lock();
-    }
-
-    std::weak_ptr<AttributeT<T> > attribute;
-    T state;
+    T mValue;
 };
 
 

@@ -48,4 +48,8 @@ template <>
 template <>
  TypeValue getValueFromType<std::string>(){return TYPE_STRING;}
 
+ bool Attribute::isFloat() {
+     return getTypeValue() == TYPE_FLOAT;
+ }
+
 }
