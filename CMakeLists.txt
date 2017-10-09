@@ -128,6 +128,8 @@ add_library(${LibraryName} STATIC
 
 target_link_libraries(${LibraryName} ${Boost_LIBRARIES} ${OpenCV_LIBS})
 
+target_include_directories(${LibraryName} PUBLIC src/)
+
 add_executable(basic_interface ./src/examples/basic_interface.cpp)
 #set_target_properties(basic_interface PROPERTIES DEBUG_POSTFIX _d)
 target_link_libraries(basic_interface ${LibraryName})
@@ -180,53 +182,53 @@ endforeach(testSrc)
 
 
   
-install(TARGETS ${LibraryName}
-  # IMPORTANT: Add the foo library to the "export-set"
-  EXPORT InstantInterfaceTargets
-  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
-  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
-  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
-  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/InstantInterface"
-    COMPONENT dev)
+#install(TARGETS ${LibraryName}
+#  # IMPORTANT: Add the foo library to the "export-set"
+#  EXPORT InstantInterfaceTargets
+#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
+#  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+#  ARCHIVE DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
+#  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/InstantInterface"
+#    COMPONENT dev)
     
-install(TARGETS basic_interface
-  # IMPORTANT: Add the bar executable to the "export-set"
-  EXPORT InstantInterfaceTargets
-  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
+#install(TARGETS basic_interface
+#  # IMPORTANT: Add the bar executable to the "export-set"
+#  EXPORT InstantInterfaceTargets
+#  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin)
     
 
-# Add all targets to the build-tree export set
-export(TARGETS ${LibraryName}
-  FILE "${PROJECT_BINARY_DIR}/InstantInterfaceTargets.cmake")
+## Add all targets to the build-tree export set
+#export(TARGETS ${LibraryName}
+#  FILE "${PROJECT_BINARY_DIR}/InstantInterfaceTargets.cmake")
  
-# Export the package for use from the build-tree
-# (this registers the build-tree with a global CMake-registry)
-export(PACKAGE ${LibraryName})
+## Export the package for use from the build-tree
+## (this registers the build-tree with a global CMake-registry)
+#export(PACKAGE ${LibraryName})
  
-# Create the FooBarConfig.cmake and FooBarConfigVersion files
-file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
-   "${INSTALL_INCLUDE_DIR}")
-# ... for the build tree
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}")
-configure_file(InstantInterfaceConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/InstantInterfaceConfig.cmake" @ONLY)
-# ... for the install tree
-set(CONF_INCLUDE_DIRS "\${InstantInterface_CMAKE_DIR}/${REL_INCLUDE_DIR}")
-configure_file(InstantInterfaceConfig.cmake.in
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/InstantInterfaceConfig.cmake" @ONLY)
+## Create the FooBarConfig.cmake and FooBarConfigVersion files
+#file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
+#   "${INSTALL_INCLUDE_DIR}")
+## ... for the build tree
+#set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}")
+#configure_file(InstantInterfaceConfig.cmake.in
+#  "${PROJECT_BINARY_DIR}/InstantInterfaceConfig.cmake" @ONLY)
+## ... for the install tree
+#set(CONF_INCLUDE_DIRS "\${InstantInterface_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+#configure_file(InstantInterfaceConfig.cmake.in
+#  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/InstantInterfaceConfig.cmake" @ONLY)
   
-# ... for both
-#configure_file(InstantInterfaceConfigVersion.cmake.in
-#  "${PROJECT_BINARY_DIR}/InstantInterfaceConfigVersion.cmake" @ONLY)
+## ... for both
+##configure_file(InstantInterfaceConfigVersion.cmake.in
+##  "${PROJECT_BINARY_DIR}/InstantInterfaceConfigVersion.cmake" @ONLY)
  
-# Install the FooBarConfig.cmake and FooBarConfigVersion.cmake
-install(FILES
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/InstantInterfaceConfig.cmake"
-  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-#  "${PROJECT_BINARY_DIR}/InstantInterfaceConfigVersion.cmake"
+## Install the FooBarConfig.cmake and FooBarConfigVersion.cmake
+#install(FILES
+#  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/InstantInterfaceConfig.cmake"
+#  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+##  "${PROJECT_BINARY_DIR}/InstantInterfaceConfigVersion.cmake"
  
  
-# Install the export set for use with the install-tree
-install(EXPORT InstantInterfaceTargets DESTINATION
-  "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+## Install the export set for use with the install-tree
+#install(EXPORT InstantInterfaceTargets DESTINATION
+#  "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
