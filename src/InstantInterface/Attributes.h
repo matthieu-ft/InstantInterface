@@ -467,6 +467,7 @@ private:
     T action;
 };
 
+using ActionPtr = std::shared_ptr<Action>;
 
 /**
  * @brief the helper functions defined in AttributeFactory enable to create Attributes with taking little care to the template parameter, as most of the work is done automatically
